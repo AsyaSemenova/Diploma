@@ -6,6 +6,8 @@ from vk_api import longpoll
 
 from config import *
 from vk_api.longpoll import VkLongPoll, VkEventType
+import bd
+from bd import create_tables, client, Person, session, Seen_persones
 
 
 class Bot:
@@ -98,9 +100,8 @@ class Bot:
                              self.write_msg('Ошибка')
 
     def looking_for_persons(self, user_id, city_id, age_from, age_to, sex, offset=None):
-        # записывает инфу
-        try:
-            profiles = self.vk_bot.method('users.search',
+        # ищет кандидатов
+        profiles = self.vk_bot.method('users.search',
                                            {'city_id': city_id,
                                             'age_from': age_from,
                                             'age_to': age_to,
@@ -109,9 +110,11 @@ class Bot:
                                             'status': 1 or 6,
                                             'offset': offset
                                             })
+        try :
+            profiles = profiles['items']
         except KeyError:
             return
-        profiles = profiles['items']
+
         result = []
         for profile in profiles:
             if profile['is_closed'] == False:
@@ -122,6 +125,7 @@ class Bot:
 
 
     def photos_get(self, user_id):
+        # получение фото
         photo_param = {'owner_id': user_id, 'album_id': 'profile',
                             'extended': '1', 'count': '20'}
         photos = self.vk_bot.method('photos.get', photo_param)
@@ -140,27 +144,93 @@ class Bot:
                     photos_results = list(photo_dict.values())[0:photos_count]
         return
 
+    def show_all_users(self, user_id, persons):
+        #найденные юзеры
+        for person in persons:
+            person_id = person['user_id']
+            print(person_id)
+            photos = self.photos_get(person_id)
+            if photos:
+                self.write_msg(user_id, *self.show(person, photos))
+                pair = session.query(Person).filter(Person.person_id == (person_id)).all()
+                if not bool(pair):
+                    self.add_to_bd(person)
+                # добавляем в просмотренные
+                self.add_to_seen(person['user_id'], user_id)
+                for event in self.longpoll.listen():
+                    if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+                        request = event.text.lower()
+                        user_id = event.user_id
+                if request == 'Дальше':
+                    continue
+            elif request == 'Стоп':
+                self.write_msg(user_id, "Пока")
+                return True
+
+
     def show(self,profile, photos_results):
+        # выводит инфу о пользователе
         person_age = self.get_age()
         age = f", {person_age} {('год', ('лет', 'года') [0 < person_age % 10 < 5])[person_age % 10 != 1]}"
         return f"{profile['first_name']} {age}\nhttps://vk.com/id{profile['user_id']}", photos_results
 
+    def add_to_bd(user_info, user_id):
+        # добавление в бд
+        user_bd = client(user_id=user_id, first_name=user_info['first_name'], bdate=user_info.get('bdate', 0),
+                       sex=user_info['sex'], city=user_info['city'], age=user_info['age'])
+        session.add(user_bd)
+        session.commit()
+
+    def add_to_seen(person_id, user_id):
+        person = Seen_persones(seen_person_id=person_id, user_id_user=user_id, liked=False)
+        session.add(person)
+        session.commit()
+
+    def get_info_from_bd(user_id):
+        # достает инфу
+        info = {}
+        try:
+            info['user_id'] = session.query(client.user_id).filter(client.user_id == user_id).all()[0][0]
+            info['first_name'] = session.query(client.first_name).filter(client.user_id == user_id).all()[0][0]
+            info['bdate'] = session.query(client.bdate).filter(client.user_id == user_id).all()[0][0]
+            info['sex'] = session.query(client.sex).filter(client.user_id == user_id).all()[0][0]
+            info['city'] = session.query(client.city).filter(client.user_id == user_id).all()[0][0]
+            info['age'] = session.query(client.age).filter(client.user_id == user_id).all()[0][0]
+        except:
+            pass
+        return info
+
+    def add_person_to_bd(person):
+        try:
+            person_bd = Person(person_id=person['user_id'], name=person['first_name'], bdate=person['bdate'],
+                               sex=person['sex'], city=person['city'])
+            session.add(person_bd)
+            session.commit()
+        except:
+            pass
+
     def main(self):
-        # create_tables(bot)
-        for event in longpoll.listen():
+        create_tables(bd.engine)
+        for event in self.longpoll.listen():
             if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                 request = event.text.lower()
                 user_id = event.user_id
                 if request =='привет' or 'начать':
-                    Bot.write_msg(user_id,f'Привет! я помогу найти тебе пару!')
-                elif request == 'поиск':
-                    Bot.get_age_of_user(user_id)
-                    Bot.get_city(user_id)
-                    Bot.looking_for_persons(user_id)
-                    Bot.show(user_id)
+                    self.write_msg(user_id,f'Привет! я помогу найти тебе пару!')
+                elif request =='поиск':
+                    self.get_age_of_user(user_id)
+                    self.get_city(user_id)
+                    self.looking_for_persons(user_id)
+                elif request == 'Дальше':
+                    if self.show_all_users() != 0:
+                        self.show(user_id)
+                    else:
+                        self.write_msg(user_id, f' В начале наберите Поиск')
+
                 else:
-                    Bot.write_msg(user_id, f'{Bot.name(user_id)} Бот готов, наберите: \n '
-                                          f' "Поиск" - для поиска кандидатов. \n')
+                    self.write_msg(user_id, f'{self.name(user_id)} Бот готов, наберите: \n '
+                                      f' "Поиск" - Поиск людей. \n')
 
-
-bot = Bot()
+if __name__  == '__main__':
+  bot = Bot()
+  bot.main()
