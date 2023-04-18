@@ -7,7 +7,7 @@ from vk_api import longpoll
 from config import *
 from vk_api.longpoll import VkLongPoll, VkEventType
 import bd
-from bd import create_tables, client, Person, session, Seen_persones
+from bd import create_tables, client, person, session, seen_persones
 
 
 class Bot:
@@ -152,7 +152,7 @@ class Bot:
             photos = self.photos_get(person_id)
             if photos:
                 self.write_msg(user_id, *self.show(person, photos))
-                pair = session.query(Person).filter(Person.person_id == (person_id)).all()
+                pair = session.query(person).filter(person.person_id == (person_id)).all()
                 if not bool(pair):
                     self.add_to_bd(person)
                 # добавляем в просмотренные
@@ -182,7 +182,7 @@ class Bot:
         session.commit()
 
     def add_to_seen(person_id, user_id):
-        person = Seen_persones(seen_person_id=person_id, user_id_user=user_id, liked=False)
+        person = seen_persones(seen_person_id=person_id, user_id_user=user_id, liked=False)
         session.add(person)
         session.commit()
 
@@ -202,7 +202,7 @@ class Bot:
 
     def add_person_to_bd(person):
         try:
-            person_bd = Person(person_id=person['user_id'], name=person['first_name'], bdate=person['bdate'],
+            person_bd = person(person_id=person['user_id'], name=person['first_name'], bdate=person['bdate'],
                                sex=person['sex'], city=person['city'])
             session.add(person_bd)
             session.commit()
