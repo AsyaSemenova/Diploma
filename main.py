@@ -7,7 +7,7 @@ from vk_api import longpoll
 from config import *
 from vk_api.longpoll import VkLongPoll, VkEventType
 import bd
-from bd import create_tables, client, person, session, seen_persones
+from bd import create_tables, Client, Person, session, Seen_persones
 
 
 class Bot:
@@ -99,13 +99,13 @@ class Bot:
                          else:
                              self.write_msg('Ошибка')
 
-    def looking_for_persons(self, user_id, city_id, age_from, age_to, sex, offset=None):
+    def looking_for_persons(self, user_id, city_id, age_from, age_to, users_sex, offset=None):
         # ищет кандидатов
         profiles = self.vk_bot.method('users.search',
                                            {'city_id': city_id,
                                             'age_from': age_from,
                                             'age_to': age_to,
-                                            'sex': sex,
+                                            'sex': users_sex,
                                             'count': 50,
                                             'status': 1 or 6,
                                             'offset': offset
@@ -176,13 +176,13 @@ class Bot:
 
     def add_to_bd(user_info, user_id):
         # добавление в бд
-        user_bd = client(user_id=user_id, first_name=user_info['first_name'], bdate=user_info.get('bdate', 0),
+        client_bd = Client(client_id=user_id, first_name=user_info['first_name'], bdate=user_info.get('bdate', 0),
                        sex=user_info['sex'], city=user_info['city'], age=user_info['age'])
-        session.add(user_bd)
+        session.add(client_bd)
         session.commit()
 
     def add_to_seen(person_id, user_id):
-        person = seen_persones(seen_person_id=person_id, user_id_user=user_id, liked=False)
+        person = Seen_persones(seen_person_id=person_id, client_id_client=user_id, liked=False)
         session.add(person)
         session.commit()
 
@@ -190,19 +190,19 @@ class Bot:
         # достает инфу
         info = {}
         try:
-            info['user_id'] = session.query(client.user_id).filter(client.user_id == user_id).all()[0][0]
-            info['first_name'] = session.query(client.first_name).filter(client.user_id == user_id).all()[0][0]
-            info['bdate'] = session.query(client.bdate).filter(client.user_id == user_id).all()[0][0]
-            info['sex'] = session.query(client.sex).filter(client.user_id == user_id).all()[0][0]
-            info['city'] = session.query(client.city).filter(client.user_id == user_id).all()[0][0]
-            info['age'] = session.query(client.age).filter(client.user_id == user_id).all()[0][0]
+            info['user_id'] = session.query(Client.user_id).filter(Client.user_id == user_id).all()[0][0]
+            info['first_name'] = session.query(Client.first_name).filter(Client.user_id == user_id).all()[0][0]
+            info['bdate'] = session.query(Client.bdate).filter(Client.user_id == user_id).all()[0][0]
+            info['sex'] = session.query(Client.sex).filter(Client.user_id == user_id).all()[0][0]
+            info['city'] = session.query(Client.city).filter(Client.user_id == user_id).all()[0][0]
+            info['age'] = session.query(Client.age).filter(Client.user_id == user_id).all()[0][0]
         except:
             pass
         return info
 
     def add_person_to_bd(person):
         try:
-            person_bd = person(person_id=person['user_id'], name=person['first_name'], bdate=person['bdate'],
+            person_bd = Person(person_id=person['user_id'], name=person['first_name'], bdate=person['bdate'],
                                sex=person['sex'], city=person['city'])
             session.add(person_bd)
             session.commit()
