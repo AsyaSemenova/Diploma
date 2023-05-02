@@ -1,5 +1,5 @@
 import sqlalchemy as sq
-from sqlalchemy import PrimaryKeyConstraint
+from sqlalchemy import PrimaryKeyConstraint, create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 
 Base = declarative_base()
@@ -18,7 +18,7 @@ class Client(Base):
     __tablename__ = 'client'
 
     client_id = sq.Column(sq.Integer, primary_key=True)
-    first_name = sq.Column(sq.Text(length=40))
+    first_name = sq.Column(sq.Text)
     bdate = sq.Column(sq.Date)
     sex = sq.Column(sq.Integer)
     city = sq.Column(sq.Integer)
@@ -33,7 +33,7 @@ class Person(Base):
     __tablename__ = 'person'
 
     person_id = sq.Column(sq.Integer, primary_key=True)
-    name = sq.Column(sq.Text(length=40))
+    name = sq.Column(sq.Text)
     bdate = sq.Column(sq.Date)
     sex = sq.Column(sq.Integer)
     city = sq.Column(sq.Integer)
@@ -46,11 +46,9 @@ class Person(Base):
 def create_tables(engine):
     Base.metadata.create_all(engine)
 
-db = "postgresql://postgres:postgres@localhost:5432/VKinder"
-engine = sq.create_engine(db)
+engine = create_engine('postgresql://postgres:Anast29123@localhost:5432/VKinder')
 create_tables(engine)
 
 Session = sessionmaker(bind=engine)
 session = Session()
-
 session.close()
