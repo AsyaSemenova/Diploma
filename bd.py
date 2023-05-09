@@ -1,54 +1,48 @@
 import sqlalchemy as sq
-from sqlalchemy import PrimaryKeyConstraint, create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base, relationship
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 Base = declarative_base()
 
-class Seen_persones(Base):
-    __tablename__ = 'seen_persones'
-    __table_args__ = (PrimaryKeyConstraint('seen_person_id', 'client_id_client', name='pk'),)
-
-
-    seen_person_id = sq.Column(sq.Integer, sq.ForeignKey("person.person_id"))
-    client_id_client = sq.Column(sq.Integer, sq.ForeignKey("client.client_id"))
-    liked = sq.Column(sq.Boolean, default=False)
-
 
 class Client(Base):
-    __tablename__ = 'client'
+    __tablename__ = 'Client'
 
-    client_id = sq.Column(sq.Integer, primary_key=True)
-    first_name = sq.Column(sq.Text)
-    bdate = sq.Column(sq.Date)
-    sex = sq.Column(sq.Integer)
-    city = sq.Column(sq.Integer)
-    age = sq.Column(sq.Integer)
-    person = relationship(Seen_persones, backref='user')
+    user_id = sq.Column(sq.Integer, primary_key=True)
+    id = sq.Column(sq.Integer, unique=True)
 
     def __str__(self):
-        return f"{self.client_id}, {self.first_name}, {self.bdate}, {self.city}, {self.city}"
+        return f'Client {self.id}: {self.user_id}'
 
 
 class Person(Base):
-    __tablename__ = 'person'
 
-    person_id = sq.Column(sq.Integer, primary_key=True)
-    name = sq.Column(sq.Text)
-    bdate = sq.Column(sq.Date)
-    sex = sq.Column(sq.Integer)
-    city = sq.Column(sq.Integer)
-    client = relationship(Seen_persones, backref="person")
+    __tablename__ = 'Person'
+
+    user_id = sq.Column(sq.Integer, primary_key=True)
+    id = sq.Column(sq.Integer, unique=True)
 
     def __str__(self):
-        return f"{self.person_id}, {self.name}, {self.bdate}, {self.sex}, {self.city}"
+        return f'Person {self.id}: {self.user_id}'
+
+
+class seen_person(Base):
+
+    __tablename__ = 'seen_person'
+
+    user_id = sq.Column(sq.Integer, primary_key=True)
+    id = sq.Column(sq.Integer, unique=True)
+    first_name = sq.Column(sq.String)
+    last_name = sq.Column(sq.String)
+    vk_link = sq.Column(sq.String, unique=True)
+
+    def __str__(self):
+        return f'Seen person {self.id}: {self.user_id}, {self.first_name},{self.last_name}, {self.vk_link},'
 
 
 def create_tables(engine):
     Base.metadata.create_all(engine)
 
-engine = create_engine('postgresql://postgres:Anast29123@localhost:5432/VKinder')
-create_tables(engine)
 
-Session = sessionmaker(bind=engine)
-session = Session()
-session.close()
+def drop_tables(engine):
+    Base.metadata.drop_all(engine)
+
