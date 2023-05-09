@@ -127,6 +127,7 @@ def looking_for_persons(user_info):
                                                     'status': 1 or 6,
                                                     'has_photo': 1,
                                                     'count': 50,
+                                                    'offset':0,
                                                     'v': 5.131})
 
     if profiles:
