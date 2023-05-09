@@ -1,10 +1,9 @@
 from bot import *
 
 
-
 def main():
-    if not database_exists(engine):
-        create_database(engine)
+    if not database_exists(engine.url):
+        create_database(engine.url)
     сreate_tables(engine)
     list_chosen = []
     for event in longpoll.listen():
@@ -17,15 +16,14 @@ def main():
                     write_msg(user_id,
                                    f"Привет, это бот VKinder!\n"
                                    f"Бот осуществляет поиск подходящей по критериям пары.\n"
-                                   f"Чтобы начать поиск введите команду 'начать поиск'.\n"
-                                   f"Для окончания работы с ботом введите команду 'пока',"
-                                   f" либо напишите 'нет' при вопросе о продолжении поиска.", None)
-                elif request in ['начать поиск', 'да']:
+                                   f"Чтобы начать поиск введите команду 'поиск'.\n"
+                                   f"Для окончания работы с ботом введите команду 'пока'.", None)
+                elif request in ['поиск', 'да']:
                     random_choice = []
                     get_random_user_data = get_random_user(persons_data(user_id), user_id)
                     random_choice.append(get_random_user_data)
                     add_user_table([get_random_user_data], user_id)
-                                        if random_choice[0]['id'] not in list_chosen:
+                    if random_choice[0]['id'] not in list_chosen:
                         write_msg(user_id,
                                        {random_choice[0]['first_name'] + ' ' + random_choice[0]['last_name']},
                                        {','.join(get_photos_list(sort_likes(photos_get(random_choice[0]['id']))))})
@@ -42,4 +40,3 @@ def main():
 
 
 main()
-
