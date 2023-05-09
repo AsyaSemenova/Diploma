@@ -5,14 +5,22 @@ import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 from config import bot_token, access_token
 from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import database_exists, create_database
 from bd import create_tables, drop_tables, Client, Person, seen_person
 
+url_object = URL.create(
+    'postgresql',
+    username='postgres',
+    password='Anast29123',
+    host='localhost',
+    database='VKinder',)
 
-engine = create_engine('postgresql://postgres:Anast29123@localhost:5432/VKinder')
-if not database_exists(engine):
-    create_database(engine)
+engine = create_engine(url_object)
+
+if not database_exists(engine.url):
+    create_database(engine.url)
 
 drop_tables(engine)
 create_tables(engine)
@@ -167,12 +175,12 @@ def get_photos_list( sort_list):
         if count == 3:
             return photos_list
 
-def get_users_list( user_info, user_id):
+def get_users_list( persons_data, user_id):
     person_list = []
-    if user_info:
-        for person in user_info:
+    if persons_data:
+        for person in persons_data:
             if person.get('is_closed') == False:
-                user_info.append(
+                persons_data.append(
                     {'first_name': person.get('first_name'), 'last_name': person.get('last_name'),
                      'id': person.get('id'), 'vk_link': 'vk.com/id' + str(person.get('id')),
                      'is_closed': person.get('is_closed')
@@ -199,9 +207,9 @@ def persons_data(user_id):
     return False
 
 
-def get_random_user(user_info, user_id):
-    if user_info:
-        return random.choice(user_info)
+def get_random_user(persons_data, user_id):
+    if persons_data:
+        return random.choice(persons_data)
     write_msg(user_id, 'Ошибка', None)
     return False
 
@@ -219,9 +227,9 @@ def add_table(user_info):
     return False
 
 
-def add_user_table(user_info, user_id):
+def add_user_table(persons_data, user_id):
     try:
-        for item in user_info:
+        for item in persons_data:
             users_record = session.query(Person).filter_by(id=item['id']).scalar()
             if not users_record:
                 users_record = Person(id=item['id'])
