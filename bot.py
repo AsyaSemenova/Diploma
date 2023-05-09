@@ -114,6 +114,7 @@ def get_age(user_info):
 
 def looking_for_persons(user_info):
     # ищет кандидатов
+    global age_to, age_from
     if user_info['age'] - 5 < 18:
         age_from = 18
     else:
@@ -127,7 +128,7 @@ def looking_for_persons(user_info):
                                                     'status': 1 or 6,
                                                     'has_photo': 1,
                                                     'count': 50,
-                                                    'offset':0,
+                                                    'offset': 0,
                                                     'v': 5.131})
 
     if profiles:
@@ -208,11 +209,11 @@ def get_random_user(user_info, user_id):
 def add_table(user_info):
     if user_info:
         for item in user_info:
-            user_record = Session.query(Client).filter_by(user_id=item['id']).scalar()
+            user_record = session.query(Client).filter_by(user_id=item['id']).scalar()
             if not user_record:
                 user_record = Client(id=item['id'])
-            Session.add(user_record)
-            Session.commit()
+            session.add(user_record)
+            session.commit()
         return True
     write_msg(user_info['id'], 'Ошибка', None)
     return False
@@ -221,25 +222,24 @@ def add_table(user_info):
 def add_user_table(user_info, user_id):
     try:
         for item in user_info:
-            users_record = Session.query(Person).filter_by(id=item['id']).scalar()
+            users_record = session.query(Person).filter_by(id=item['id']).scalar()
             if not users_record:
                 users_record = Person(id=item['id'])
-            Session.add(users_record)
-            Session.commit()
+            session.add(users_record)
+            session.commit()
         return True
     except TypeError:
-        Session.rollback()
+        session.rollback()
         write_msg(user_id, 'Ошибка', None)
         return False
 
 
 def seen_person(random_choice):
     for item in random_choice:
-        random_user_record = Session.query(seen_person).filter_by(id=item['id']).scalar()
+        random_user_record = session.query(seen_person).filter_by(id=item['id']).scalar()
         if not random_user_record:
             random_user_record = seen_person(id=item['id'], first_name=item['first_name'],
                                              last_name=item['last_name'],
                                              vk_link=item['vk_link'])
-        Session.add(random_user_record)
-    return Session.commit()
-
+        session.add(random_user_record)
+    return session.commit()
