@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import database_exists, create_database
-from bd import create_tables, drop_tables, Client, Person, seen_person
+from database import create_tables, drop_tables, Client, Person, seen_person
 
 url_object = URL.create(
     'postgresql',
