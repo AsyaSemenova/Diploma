@@ -149,7 +149,7 @@ def looking_for_persons(user_info):
 def photos_get( user_id):
     # получение фото
     photo_param = {'owner_id': user_id, 'album_id': 'profile',
-                   'extended': '1', 'count': '20'}
+                   'extended': 'likes', 'count': '20'}
     photos = vk_user.method('photos.getAll', photo_param)
     if photos:
         if photos.get('items'):
@@ -169,8 +169,8 @@ def sort_likes( photos_dict):
 def get_photos_list( sort_list):
     photos_list = []
     count = 0
-    for photos in sort_list:
-        photos_list.append('photo' + str(photos[0]) + '_' + str(photos[1]))
+    for photo in sort_list:
+        photos_list.append('photo' + str(photo[0]) + '_' + str(photo[1]))
         count += 1
         if count == 3:
             return photos_list
@@ -180,7 +180,7 @@ def get_users_list( persons_data, user_id):
     if persons_data:
         for person in persons_data:
             if person.get('is_closed') == False:
-                persons_data.append(
+                person_list.append(
                     {'first_name': person.get('first_name'), 'last_name': person.get('last_name'),
                      'id': person.get('id'), 'vk_link': 'vk.com/id' + str(person.get('id')),
                      'is_closed': person.get('is_closed')
