@@ -4,14 +4,14 @@ from bot import *
 def main():
     if not database_exists(engine.url):
         create_database(engine.url)
-    сreate_tables(engine)
+    create_tables(engine)
     list_chosen = []
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW:
             if event.to_me:
                 user_id = event.user_id
                 request = event.text.lower()
-                if request == 'привет' or request == 'начать':
+                if request == 'привет':
                     add_table(user_data(user_id))
                     write_msg(user_id,
                                    f"Привет, это бот VKinder!\n"
@@ -26,7 +26,7 @@ def main():
                     if random_choice[0]['id'] not in list_chosen:
                         write_msg(user_id,
                                        {random_choice[0]['first_name'] + ' ' + random_choice[0]['last_name']},
-                                       {','.join(get_photos_list(sort_likes(photos_get(random_choice[0]['id']))))})
+                                       {' '.join(get_photos_list(sort_likes(photos_get(random_choice[0]['id']))))})
                         write_msg(user_id, f"Ссылка на профиль:{random_choice[0]['vk_link']}", None)
                         write_msg(user_id,  f"Продолжить поиск? Напишите дa или нет.\n", None)
                     else:
