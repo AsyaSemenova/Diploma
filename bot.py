@@ -158,22 +158,11 @@ def photos_get( user_id):
         return False
 
 def sort_likes( photos_dict):
-    photos_likes_list = []
-
-    for photo in photos_dict:
-        likes = photo.get('likes')
-        photos_likes_list.append([photo.get('user_id'), photo.get('id'), likes.get('count')])
-    photos_by_likes_list = sorted(photos_likes_list, key=lambda x: x[2], reverse=True)
-    return photos_by_likes_list
-
-def get_photos_list( sort_list):
-    photos_list = []
-    count = 0
-    for photo in sort_list:
-        photos_list.append('photo' + str(photo[0]) + '_' + str(photo[1]))
-        count += 1
-        if count == 3:
-            return photos_list
+    sorted_photo_dict = sorted(photos, key=lambda i: i['likes']['count'], reverse=True)[:3]
+    print(sorted_photo_dict)
+    medias = [f'photo{p["owner_id"]}_{p["id"]}' for p in sorted_photo_dict]
+    print(medias)
+    return medias
 
 def get_users_list( persons_data, user_id):
     person_list = []
