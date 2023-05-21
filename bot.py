@@ -157,7 +157,7 @@ def photos_get( user_id):
         write_msg(user_id, 'Ошибка', None)
         return False
 
-def sort_likes( photos_dict):
+def sort_likes(photos):
     sorted_photo_dict = sorted(photos, key=lambda i: i['likes']['count'], reverse=True)[:3]
     print(sorted_photo_dict)
     medias = [f'photo{p["owner_id"]}_{p["id"]}' for p in sorted_photo_dict]
