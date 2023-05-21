@@ -33,15 +33,12 @@ vk_bot = vk_api.VkApi(token=bot_token)
 longpoll = VkLongPoll(vk_bot)
 
 
-def write_msg( user_id, message, photos=None):
-    params = {'user_id': user_id, 'message': message, 'random_id': randrange(10 ** 7)}
-    if photos:
-        attachment = photos
-        print(attachment)
-    return vk_bot.method('messages.send', params)
-
+def write_msg(user_id, message, attachment):
+    vk_bot.method('messages.send',
+              {'user_id': user_id, 'message': message, 'attachment': attachment,  'random_id': randrange(10 ** 7)})
 
 def check_info(user_id):
+    # сбор инфы
     user_info = {}
     response = vk_user.method('users.get', {'user_id': user_id,
                                                  'v': 5.131,
@@ -71,6 +68,7 @@ def check_missing_info(user_info):
     return False
 
 def check_bdate(user_info, user_id):
+    # уточнение др
     if user_info:
         for item_dict in [user_info]:
             if len(item_dict['bdate'].split('.')) != 3:
@@ -97,6 +95,7 @@ def get_city(city_user):
         return False
 
 def check_city(user_info, user_id):
+    # уточнение города
     if user_info:
         for item in [user_info]:
             if item['city'] == '':
@@ -112,6 +111,7 @@ def check_city(user_info, user_id):
 
 
 def get_age(user_info):
+    # считает возраст
     if user_info:
         for key, value in user_info:
             user_info['age'] = datetime.datetime.now().year - int(user_info['bdate'][-4:])
@@ -129,15 +129,15 @@ def looking_for_persons(user_info):
         age_from = user_info['age'] - 5
         age_to = user_info['age'] + 5
 
-    profiles = vk_user.method('users.search', {'age_from': age_from,
-                                                    'age_to': age_to,
-                                                    'sex': 3 - user_info['sex'],
-                                                    'city': user_info['city'],
-                                                    'status': 1 or 6,
-                                                    'has_photo': 1,
-                                                    'count': 50,
-                                                    'offset': 0,
-                                                    'v': 5.131})
+    profiles = vk_user.method('users.search', {'age_to': age_to,
+                                               'age_from': age_from,
+                                                'sex': 3 - user_info['sex'],
+                                                'city': user_info['city'],
+                                                'status': 1 or 6,
+                                                'has_photo': 1,
+                                                'count': 50,
+                                                'offset': 0,
+                                                'v': 5.131})
 
     if profiles:
         if profiles.get('items'):
@@ -146,7 +146,7 @@ def looking_for_persons(user_info):
         return False
 
 
-def photos_get( user_id):
+def photos_get(user_id):
     # получение фото
     photo_param = {'owner_id': user_id, 'album_id': 'profile',
                    'extended': 'likes', 'count': '20'}
@@ -158,13 +158,15 @@ def photos_get( user_id):
         return False
 
 def sort_likes(photos):
+    # сортировка фото
     sorted_photo_dict = sorted(photos, key=lambda i: i['likes']['count'], reverse=True)[:3]
     print(sorted_photo_dict)
     medias = [f'photo{p["owner_id"]}_{p["id"]}' for p in sorted_photo_dict]
     print(medias)
     return medias
 
-def get_users_list( persons_data, user_id):
+
+def get_users_list(persons_data, user_id):
     person_list = []
     if persons_data:
         for person in persons_data:
@@ -180,7 +182,7 @@ def get_users_list( persons_data, user_id):
     write_msg(user_id, 'Ошибка при поиске', None)
     return False
 
-def user_data( user_id):
+def user_data(user_id):
     user_data = [get_age(check_city(check_bdate(check_missing_info(check_info(user_id)), user_id), user_id))]
     if user_data:
         return user_data
