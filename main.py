@@ -25,8 +25,8 @@ def main():
                     add_user_table([get_random_user_data], user_id)
                     if random_choice[0]['id'] not in list_chosen:
                         write_msg(user_id,
-                                       {random_choice[0]['first_name'] + ' ' + random_choice[0]['last_name']},
-                                       {' '.join(get_photos_list(sort_likes(photos_get(random_choice[0]['id']))))})
+                                       write_msg(user_id, {random_choice[0]['first_name'] + ' ' + random_choice[0]['last_name']},
+                                  {','.join((sort_likes(photos_get(random_choice[0]['id']))))})
                         write_msg(user_id, f"Ссылка на профиль:{random_choice[0]['vk_link']}", None)
                         write_msg(user_id,  f"Продолжить поиск? Напишите дa или нет.\n", None)
                     else:
